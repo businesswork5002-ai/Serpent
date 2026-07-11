@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#120c10" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<title>Privacy Policy — Serpent</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600&display=swap');
+  :root{
+    --bg:#0f0e13; --surface:#181620; --card:#1f1c28; --border:#2c2836;
+    --text:#f1ece6; --muted:#a79db0; --a:#ff8966; --b:#ff5e78; --accent:#ffb17a;
+    --font-display:'Fraunces',serif; --font-body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--font-body); line-height:1.7; font-size:15.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .glow{
+    position:fixed; top:-20%; left:50%; transform:translateX(-50%);
+    width:600px; height:400px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,94,120,0.16), transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+  header{ position:relative; z-index:1; padding:56px 24px 32px; text-align:center; }
+  .mark{
+    width:44px; height:44px; margin:0 auto 18px; border-radius:14px;
+    background:linear-gradient(135deg,var(--a),var(--b));
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+    box-shadow:0 8px 24px rgba(255,94,120,0.35);
+  }
+  h1{ font-family:var(--font-display); font-weight:600; font-size:clamp(28px,6vw,40px); margin:0 0 8px; }
+  .updated{ color:var(--muted); font-size:13px; letter-spacing:.02em; }
+  main{ position:relative; z-index:1; max-width:640px; margin:0 auto; padding:8px 24px 100px; }
+  .toc{
+    background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:20px 22px; margin:24px 0 40px;
+  }
+  .toc-label{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:10px; font-weight:600; }
+  .toc a{ display:block; color:var(--text); text-decoration:none; font-size:14.5px; padding:5px 0; opacity:.85; }
+  .toc a:hover{ opacity:1; color:var(--accent); }
+  section{ margin-bottom:38px; scroll-margin-top:20px; }
+  h2{
+    font-family:var(--font-display); font-weight:600; font-size:21px;
+    margin:0 0 14px; display:flex; align-items:baseline; gap:10px;
+  }
+  h2 .num{ color:var(--a); font-family:var(--font-body); font-weight:600; font-size:13px; }
+  p{ margin:0 0 14px; color:#d9d2e0; }
+  ul{ margin:0 0 14px; padding-left:20px; color:#d9d2e0; }
+  li{ margin-bottom:8px; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 20px; margin:16px 0; }
+  .fill{
+    background:rgba(255,137,102,0.12); border:1px dashed rgba(255,137,102,0.5);
+    color:var(--accent); padding:1px 8px; border-radius:6px; font-size:.95em;
+  }
+  .flag{
+    background:var(--card); border-left:3px solid var(--a); border-radius:0 12px 12px 0;
+    padding:14px 18px; margin:28px 0; font-size:13.5px; color:var(--muted);
+  }
+  .flag b{ color:var(--text); }
+  a{ color:var(--accent); }
+  footer{ position:relative; z-index:1; text-align:center; padding:40px 24px 60px; color:var(--muted); font-size:13px; }
+  code{ background:var(--card); padding:2px 6px; border-radius:5px; font-size:.9em; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<header>
+  <div class="mark">🔥</div>
+  <h1>Privacy Policy</h1>
+  <div class="updated">Serpent · Last updated <span class="fill">[DATE]</span></div>
+</header>
+
+<main>
+  <div class="flag">
+    <b>Before you publish:</b> fill in every <span class="fill">[bracketed]</span> placeholder below — your support email, your name/entity, your jurisdiction, and the date. This document is accurate about how Serpent's code actually works as of the version you're publishing, but it isn't legal advice; have someone qualified review it for your specific situation before it goes live.
+  </div>
+
+  <nav class="toc">
+    <div class="toc-label">On this page</div>
+    <a href="#summary">The short version</a>
+    <a href="#what-happens">What happens when you use Serpent</a>
+    <a href="#third-parties">Services Serpent relies on to connect you</a>
+    <a href="#device">What's stored on your device</a>
+    <a href="#blocking">Blocking &amp; reporting</a>
+    <a href="#children">Children's privacy</a>
+    <a href="#security">Security</a>
+    <a href="#deletion">Deleting your data</a>
+    <a href="#changes">Changes to this policy</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <section id="summary">
+    <h2><span class="num">01</span> The short version</h2>
+    <p>Serpent connects you directly to the friends you share your code with, one-to-one or in a small group — messages, photos, voice notes, and calls travel <b>peer-to-peer</b>, straight between devices. There's no central server storing your conversations, because there is no server in that path at all. We can't read your messages because they never pass through anything we operate.</p>
+    <p>Groups work the same way: each member's device connects directly to every other member's. There's no group server either — just more direct connections at once.</p>
+    <p>The rest of this page spells out exactly what that means in practice, including the small number of third-party services involved in setting up those direct connections.</p>
+  </section>
+
+  <section id="what-happens">
+    <h2><span class="num">02</span> What happens when you use Serpent</h2>
+    <p>Serpent uses a technology called WebRTC to open a direct connection between your browser and your friend's. Once that connection is open:</p>
+    <ul>
+      <li><b>Messages, photos, voice notes, and files</b> are sent directly to the other device over that connection. We don't have a copy, and we can't retrieve them for you if they're lost.</li>
+      <li><b>Camera and microphone</b> access is requested only when you start or accept a call, and only used to send that live audio/video to the person you're calling. Call audio and video are encrypted in transit (DTLS-SRTP, built into WebRTC) and are not recorded or stored anywhere by Serpent unless you personally use the in-app recording feature — and if you do, that recording is saved to your own device, not uploaded to us.</li>
+      <li><b>Typing indicators, read receipts, and call-quality signals</b> (like connection speed) stay between the two of you, for the same reason — they travel over the same direct connection.</li>
+    </ul>
+  </section>
+
+  <section id="third-parties">
+    <h2><span class="num">03</span> Services Serpent relies on to connect you</h2>
+    <p>A direct connection still needs a little help getting started — think of it like needing a phone number before you can call someone directly. Serpent uses:</p>
+    <div class="card">
+      <p style="margin-bottom:6px;"><b>A signalling service (PeerJS)</b> — briefly sees your code and your friend's code so it can introduce your two devices to each other. It does not see your messages, files, or calls.</p>
+      <p style="margin-bottom:6px;"><b>STUN servers (Google, Cloudflare)</b> — help each device figure out its own public network address, a standard, necessary part of any WebRTC connection. They see IP addresses, not content.</p>
+      <p style="margin-bottom:0;"><b>A TURN relay (Metered/OpenRelay)</b> — only used as a fallback if a direct connection can't be established (for example, on a restrictive network). If used, it relays your already-encrypted call/data traffic without being able to read it.</p>
+    </div>
+    <p>None of these services are operated by us, and none of them receive your name, your messages, or anything you send in-app beyond what's described above.</p>
+  </section>
+
+  <section id="device">
+    <h2><span class="num">04</span> What's stored on your device</h2>
+    <p>Serpent saves a few things locally in your browser's storage so the app remembers you between visits — your saved code, your display name, your theme preference, any anniversary date or streak data you've set, and your blocked-codes list. None of this leaves your device or syncs to a server; it's the same as any website remembering your preferences.</p>
+  </section>
+
+  <section id="blocking">
+    <h2><span class="num">05</span> Blocking &amp; reporting</h2>
+    <p>Because Serpent is peer-to-peer, there's no central moderation team reviewing conversations. Instead, you're always in control: the <b>Block &amp; report</b> option (in the ⋮ menu) immediately and permanently stops a specific code from being able to reach you, and you from reaching it, until you choose to unblock it. If you also describe what happened, that's sent as a regular email to <span class="fill">[YOUR_SUPPORT_EMAIL]</span> — nowhere else.</p>
+  </section>
+
+  <section id="children">
+    <h2><span class="num">06</span> Children's privacy</h2>
+    <p>Serpent is intended for use by people aged <span class="fill">[13/16/18 — pick what applies in your target markets]</span> and older. We don't knowingly collect personal information from children, and because there's no account system or server-side storage, we generally have no way to identify a user's age at all. If you believe a child is using Serpent in a way that concerns you, please contact us at the address below.</p>
+  </section>
+
+  <section id="security">
+    <h2><span class="num">07</span> Security</h2>
+    <p>Calls and direct messages use WebRTC's built-in end-to-end encryption (DTLS-SRTP) between your device and your friend's. Because there's no server in that path, there's no server-side database of your conversations to be breached. The main thing worth protecting is your code itself — anyone who has it can connect to you, so treat it like you would a phone number you only give to people you trust, and use Block &amp; report if that ever changes.</p>
+  </section>
+
+  <section id="deletion">
+    <h2><span class="num">08</span> Deleting your data</h2>
+    <p>Since your messages and files live only on your and your friend's own devices, deleting them means clearing them from those devices — through the app's own chat/export controls, or by clearing this site's data in your browser settings. There's no copy on our end to separately delete, because we never had one.</p>
+  </section>
+
+  <section id="changes">
+    <h2><span class="num">09</span> Changes to this policy</h2>
+    <p>If this policy changes, we'll update the date at the top of this page. Continuing to use Serpent after a change means you accept the updated policy.</p>
+  </section>
+
+  <section id="contact">
+    <h2><span class="num">10</span> Contact</h2>
+    <p>Questions about this policy, or about Serpent generally: <span class="fill">[YOUR_SUPPORT_EMAIL]</span></p>
+  </section>
+</main>
+
+<footer>Serpent · <span class="fill">[Your name or company]</span></footer>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#120c10" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<title>Terms of Use — Serpent</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600&display=swap');
+  :root{
+    --bg:#0f0e13; --surface:#181620; --card:#1f1c28; --border:#2c2836;
+    --text:#f1ece6; --muted:#a79db0; --a:#ff8966; --b:#ff5e78; --accent:#ffb17a;
+    --font-display:'Fraunces',serif; --font-body:'Inter',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--font-body); line-height:1.7; font-size:15.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .glow{
+    position:fixed; top:-20%; left:50%; transform:translateX(-50%);
+    width:600px; height:400px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,94,120,0.16), transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+  header{ position:relative; z-index:1; padding:56px 24px 32px; text-align:center; }
+  .mark{
+    width:44px; height:44px; margin:0 auto 18px; border-radius:14px;
+    background:linear-gradient(135deg,var(--a),var(--b));
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+    box-shadow:0 8px 24px rgba(255,94,120,0.35);
+  }
+  h1{ font-family:var(--font-display); font-weight:600; font-size:clamp(28px,6vw,40px); margin:0 0 8px; }
+  .updated{ color:var(--muted); font-size:13px; letter-spacing:.02em; }
+  main{ position:relative; z-index:1; max-width:640px; margin:0 auto; padding:8px 24px 100px; }
+  .toc{
+    background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:20px 22px; margin:24px 0 40px;
+  }
+  .toc-label{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:10px; font-weight:600; }
+  .toc a{ display:block; color:var(--text); text-decoration:none; font-size:14.5px; padding:5px 0; opacity:.85; }
+  .toc a:hover{ opacity:1; color:var(--accent); }
+  section{ margin-bottom:38px; scroll-margin-top:20px; }
+  h2{
+    font-family:var(--font-display); font-weight:600; font-size:21px;
+    margin:0 0 14px; display:flex; align-items:baseline; gap:10px;
+  }
+  h2 .num{ color:var(--a); font-family:var(--font-body); font-weight:600; font-size:13px; }
+  p{ margin:0 0 14px; color:#d9d2e0; }
+  ul{ margin:0 0 14px; padding-left:20px; color:#d9d2e0; }
+  li{ margin-bottom:8px; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px 20px; margin:16px 0; }
+  .fill{
+    background:rgba(255,137,102,0.12); border:1px dashed rgba(255,137,102,0.5);
+    color:var(--accent); padding:1px 8px; border-radius:6px; font-size:.95em;
+  }
+  .flag{
+    background:var(--card); border-left:3px solid var(--a); border-radius:0 12px 12px 0;
+    padding:14px 18px; margin:28px 0; font-size:13.5px; color:var(--muted);
+  }
+  .flag b{ color:var(--text); }
+  .never{
+    background:rgba(240,112,112,0.1); border:1px solid rgba(240,112,112,0.35);
+    border-radius:16px; padding:18px 20px; margin:16px 0;
+  }
+  .never-label{ color:var(--red,#f07070); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
+  a{ color:var(--accent); }
+  footer{ position:relative; z-index:1; text-align:center; padding:40px 24px 60px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+
+<header>
+  <div class="mark">🔥</div>
+  <h1>Terms of Use</h1>
+  <div class="updated">Serpent · Last updated <span class="fill">[DATE]</span></div>
+</header>
+
+<main>
+  <div class="flag">
+    <b>Before you publish:</b> fill in every <span class="fill">[bracketed]</span> placeholder — your support email, your name/entity, and your governing jurisdiction. This covers the ground Google Play requires (defining and prohibiting objectionable content, describing your blocking mechanism), but it isn't legal advice — have it reviewed for your specific situation before publishing.
+  </div>
+
+  <nav class="toc">
+    <div class="toc-label">On this page</div>
+    <a href="#acceptance">Acceptance of these terms</a>
+    <a href="#service">What Serpent is</a>
+    <a href="#eligibility">Who can use Serpent</a>
+    <a href="#conduct">Acceptable use</a>
+    <a href="#moderation">No central moderation — blocking &amp; reporting</a>
+    <a href="#content">Your content</a>
+    <a href="#ip">Our intellectual property</a>
+    <a href="#disclaimer">Disclaimer of warranties</a>
+    <a href="#liability">Limitation of liability</a>
+    <a href="#termination">Termination</a>
+    <a href="#changes">Changes to these terms</a>
+    <a href="#law">Governing law</a>
+    <a href="#contact">Contact</a>
+  </nav>
+
+  <section id="acceptance">
+    <h2><span class="num">01</span> Acceptance of these terms</h2>
+    <p>By using Serpent, you agree to these terms. If you don't agree, please don't use the app. We may update these terms from time to time; continuing to use Serpent after an update means you accept the changes.</p>
+  </section>
+
+  <section id="service">
+    <h2><span class="num">02</span> What Serpent is</h2>
+    <p>Serpent is a private messaging and video-calling app that connects your device directly to your friends' — one-to-one, or in small groups of up to 6 — using shared codes rather than accounts or a central server. There's no public feed and no discovery of other users; no one can reach you unless you've shared your code with them.</p>
+  </section>
+
+  <section id="eligibility">
+    <h2><span class="num">03</span> Who can use Serpent</h2>
+    <p>You must be at least <span class="fill">[13/16/18]</span> years old to use Serpent. By using it, you're confirming you meet that requirement.</p>
+  </section>
+
+  <section id="conduct">
+    <h2><span class="num">04</span> Acceptable use</h2>
+    <p>You agree not to use Serpent to create, send, or share content that:</p>
+    <ul>
+      <li>Sexualizes, exploits, or endangers a minor in any way, or that facilitates child sexual abuse material (CSAM) — this is never permitted, without exception, and will be reported to the relevant authorities.</li>
+      <li>Is illegal where you or the person you're connecting with lives.</li>
+      <li>Threatens, harasses, bullies, or incites violence against another person.</li>
+      <li>Is shared without the other person's consent, including intimate images or recordings.</li>
+      <li>Impersonates another person or misrepresents your identity to deceive someone.</li>
+      <li>Contains malware, phishing links, or is used to scam or defraud the other person.</li>
+      <li>Infringes someone else's intellectual property or privacy rights.</li>
+    </ul>
+    <div class="never">
+      <div class="never-label">Zero tolerance</div>
+      <p style="margin-bottom:0;">Content that sexualizes or endangers minors is never allowed on Serpent under any circumstance. Accounts and codes involved in this are blocked, and it's reported as required by law.</p>
+    </div>
+  </section>
+
+  <section id="moderation">
+    <h2><span class="num">05</span> No central moderation — blocking &amp; reporting</h2>
+    <p>Because Serpent connects two devices directly, we don't see or moderate the content of your conversations in real time. Instead, you're always in control of who can reach you:</p>
+    <ul>
+      <li><b>Block:</b> the ⋮ menu → <i>Block &amp; report</i> instantly and permanently stops a specific code from connecting to you, in both directions.</li>
+      <li><b>Report:</b> the same screen lets you optionally describe what happened, which is sent directly to <span class="fill">[YOUR_SUPPORT_EMAIL]</span> for review.</li>
+    </ul>
+    <p>You're responsible for the content you send. If your use of Serpent violates these terms, we may take action against the code associated with that use, including removal from the service where technically possible.</p>
+  </section>
+
+  <section id="content">
+    <h2><span class="num">06</span> Your content</h2>
+    <p>You own what you create and send through Serpent. Since it travels directly between devices and isn't stored on our servers, we don't claim any rights to it, and we don't have a copy of it to license, sell, or use for anything. You're solely responsible for what you send and for having the right to send it.</p>
+  </section>
+
+  <section id="ip">
+    <h2><span class="num">07</span> Our intellectual property</h2>
+    <p>The Serpent app itself — its design, code, and branding — belongs to <span class="fill">[Your name or company]</span>. These terms don't grant you any rights to it beyond using the app as intended.</p>
+  </section>
+
+  <section id="disclaimer">
+    <h2><span class="num">08</span> Disclaimer of warranties</h2>
+    <p>Serpent is provided "as is," without warranties of any kind. Because calls and messages depend on a direct connection between two devices, quality and reliability depend on both people's networks and devices — we can't guarantee the connection will always work perfectly.</p>
+  </section>
+
+  <section id="liability">
+    <h2><span class="num">09</span> Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, <span class="fill">[Your name or company]</span> isn't liable for any indirect, incidental, or consequential damages arising from your use of Serpent, including content sent by the person you're connected with — since we have no ability to see, store, or moderate that content in transit.</p>
+  </section>
+
+  <section id="termination">
+    <h2><span class="num">10</span> Termination</h2>
+    <p>You can stop using Serpent at any time, for any reason — there's no account to delete, since none exists. We may restrict a specific code's ability to use Serpent if it's used to violate these terms.</p>
+  </section>
+
+  <section id="changes">
+    <h2><span class="num">11</span> Changes to these terms</h2>
+    <p>We'll update the date at the top of this page whenever these terms change. Material changes will be reflected here before they take effect.</p>
+  </section>
+
+  <section id="law">
+    <h2><span class="num">12</span> Governing law</h2>
+    <p>These terms are governed by the laws of <span class="fill">[Your jurisdiction]</span>, without regard to conflict-of-law principles.</p>
+  </section>
+
+  <section id="contact">
+    <h2><span class="num">13</span> Contact</h2>
+    <p>Questions about these terms: <span class="fill">[YOUR_SUPPORT_EMAIL]</span></p>
+  </section>
+</main>
+
+<footer>Serpent · <span class="fill">[Your name or company]</span></footer>
+</body>
+</html>
