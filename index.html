@@ -7206,6 +7206,19 @@
       if (f && f.online !== online) { f.online = online; this.save(f); }
     },
 
+    // 'online' is only ever true while an actual live connection is open —
+    // but it gets written to localStorage, so if the app is closed or
+    // refreshed while a friend was connected, that stale "online: true"
+    // survives into the next session even though there's no connection at
+    // all yet. Call this once on startup so the list always starts honest
+    // (offline) and only flips back to online when a real connection opens.
+    resetAllOnline() {
+      const all = this.getAll();
+      let changed = false;
+      Object.values(all).forEach(f => { if (f.online) { f.online = false; changed = true; } });
+      if (changed) this.saveAll(all);
+    },
+
     // ── Starting / reusing a connection ──
     connect(rawInput) {
       // Admin secret-code passthrough, same trick the old single-friend
@@ -7534,6 +7547,18 @@
     get(id) { return this.getAll()[id] || null; },
     save(group) { group.updatedAt = Date.now(); const all = this.getAll(); all[group.id] = group; this.saveAll(all); },
     list() { return Object.values(this.getAll()).sort((a, b) => b.updatedAt - a.updatedAt); },
+
+    // Same stale-flag issue as Friends.resetAllOnline() — member 'online'
+    // flags persist to localStorage and would otherwise show a member as
+    // online at app launch even though nothing has connected yet.
+    resetAllOnline() {
+      const all = this.getAll();
+      let changed = false;
+      Object.values(all).forEach(g => {
+        (g.members || []).forEach(m => { if (m.online) { m.online = false; changed = true; } });
+      });
+      if (changed) this.saveAll(all);
+    },
 
     // ── Creating a group ──
     create(name, memberCodes) {
@@ -8786,6 +8811,8 @@
       if (e.key === 'Enter') document.getElementById('peer-id-input').focus();
     });
 
+    Groups.resetAllOnline();
+    Friends.resetAllOnline();
     Groups.refreshListUI();
     Friends.refreshListUI();
     const groupInput = document.getElementById('group-msg-input');
