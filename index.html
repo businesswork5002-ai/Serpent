@@ -7220,16 +7220,29 @@
       this.ensure(id);
       if (friendConnections[id]) { this.open(id); return; } // already connected, or already connecting — don't duplicate it
 
-      setStatus('Connecting…', '');
+      this._dial(id, false);
+      this.open(id);
+    },
+
+    // Separated from connect() so a stalled first attempt can retry itself
+    // once before giving up. A slow/CGNAT mobile network often just needs
+    // a second try at ICE gathering rather than being unreachable outright.
+    _dial(id, isRetry) {
+      setStatus(isRetry ? 'Still connecting — retrying…' : 'Connecting…', '');
       const c = peer.connect(id, { reliable: true });
       this.wireConnection(id, c);
       const connectTimeout = setTimeout(() => {
         if (friendConnections[id] && !friendConnections[id].open) {
-          setStatus('No response from that code. Double check it, and make sure your friend still has the page open.', 'err');
+          if (!isRetry) {
+            try { c.close(); } catch (e) {}
+            delete friendConnections[id];
+            this._dial(id, true);
+          } else {
+            setStatus('No response from that code. Double check it, and make sure your friend still has the page open.', 'err');
+          }
         }
       }, 8000);
       c.on('open', () => clearTimeout(connectTimeout));
-      this.open(id);
     },
 
     handleIncomingConnection(c) {
@@ -9028,9 +9041,78 @@
     appendSystem('Call declined.');
   }
 
+  // ── Call-connect watchdog + ICE recovery ──────────────────────────────
+  // On a restrictive/CGNAT mobile network (common on Jio/Airtel-type
+  // carriers), ICE negotiation for a call can stall silently — no 'stream'
+  // event ever fires, no error either, it just sits on "Calling…" forever.
+  // These helpers give that a timeout with real feedback, and try to
+  // self-heal a connection that goes into 'failed'/'disconnected' instead
+  // of just dying.
+  const CALL_CONNECT_TIMEOUT_MS = 15000;
+  let _callWatchdogTimer = null;
+  let _callRetriedOnce = false;
+
+  function clearCallWatchdog() {
+    if (_callWatchdogTimer) { clearTimeout(_callWatchdogTimer); _callWatchdogTimer = null; }
+  }
+
+  function armCallWatchdog(call) {
+    clearCallWatchdog();
+    _callWatchdogTimer = setTimeout(() => {
+      // Only fires if we never got a remote stream in time.
+      if (!currentCall || currentCall !== call || (_currentCallMeta && _currentCallMeta.answered)) return;
+      console.warn('Call watchdog: no stream after', CALL_CONNECT_TIMEOUT_MS, 'ms — network is likely blocking a direct/STUN path.');
+      if (!_callRetriedOnce) {
+        _callRetriedOnce = true;
+        showVideoOverlay('Slow network — switching to relay and retrying…');
+        attemptIceRestart(call);
+      } else {
+        showVideoOverlay('Still can\'t connect — this network may be blocking calls.');
+        showToast('Call is stuck connecting. Ask your friend to try switching WiFi/mobile data, then call again.', 'error');
+      }
+    }, CALL_CONNECT_TIMEOUT_MS);
+  }
+
+  // Tries to recover a stalled call in place. Prefers a native ICE restart
+  // (renegotiates candidates without tearing down the whole call — works
+  // even mid-negotiation); falls back to a full close+redial through TURN
+  // relay only, since a symmetric-NAT phone often can't finish a direct/
+  // STUN path at all and needs the relay from the start.
+  function attemptIceRestart(call) {
+    const pc = call && call.peerConnection;
+    if (pc && typeof pc.restartIce === 'function') {
+      try { pc.restartIce(); armCallWatchdog(call); return; } catch (e) { console.warn('restartIce failed:', e); }
+    }
+    // No native restartIce support (or it threw) — redial through relay only.
+    redialThroughRelay(call);
+  }
+
+  function redialThroughRelay(oldCall) {
+    if (!conn || !conn.peer) return;
+    const wasVideo = !!(_currentCallMeta && _currentCallMeta.type === 'video');
+    try { oldCall && oldCall.close(); } catch (e) {}
+    getLocalStream(wasVideo).then(stream => {
+      const relayOnlyServers = ICE_SERVERS.filter(s => String(s.urls).startsWith('turn:'));
+      currentCall = peer.call(conn.peer, stream, {
+        metadata: { video: wasVideo },
+        config: { iceServers: relayOnlyServers.length ? relayOnlyServers : ICE_SERVERS, iceTransportPolicy: 'relay' }
+      });
+      _currentCallMeta = { direction: 'mine', type: wasVideo ? 'video' : 'audio', startedAt: Date.now(), answered: false, callId: 'call_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) };
+      if (window._attachQualityHooksToCall) window._attachQualityHooksToCall(currentCall);
+      wireCallEvents(currentCall);
+    }).catch(err => {
+      console.error('redialThroughRelay failed:', err);
+      showToast('Couldn\'t reconnect the call. Try calling again.', 'error');
+    });
+  }
+
   function wireCallEvents(call) {
+    armCallWatchdog(call);
+
     call.on('stream', remoteStream => {
       console.log('Remote stream received');
+      clearCallWatchdog();
+      _callRetriedOnce = false;
       if (_currentCallMeta) _currentCallMeta.answered = true;
       const remoteVideo = document.getElementById('remote-video');
       remoteVideo.srcObject = remoteStream;
@@ -9057,8 +9139,36 @@
         });
       }
     });
-    call.on('close', () => { console.log('Call closed'); endCall(true); });
-    call.on('error', err => { console.error('Call error:', err); endCall(true); });
+
+    // Once the call is actually flowing, keep watching the underlying
+    // RTCPeerConnection — a network hiccup mid-call (switching from WiFi to
+    // mobile data, a weak signal, etc.) drops it into 'disconnected' first,
+    // which often self-heals in a few seconds, and only escalates to
+    // 'failed' if it doesn't. Only 'failed' triggers an actual recovery
+    // attempt, so a brief blip doesn't cause an unnecessary redial.
+    const pc = call.peerConnection;
+    if (pc) {
+      const onIceStateChange = () => {
+        console.log('ICE connection state:', pc.iceConnectionState);
+        if (pc.iceConnectionState === 'disconnected') {
+          setStatus && setStatus('Connection unstable — trying to recover…', 'err');
+        } else if (pc.iceConnectionState === 'failed') {
+          if (!_callRetriedOnce) {
+            _callRetriedOnce = true;
+            attemptIceRestart(call);
+          } else {
+            endCall(true);
+            showToast('Call dropped — the network connection failed.', 'error');
+          }
+        } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+          _callRetriedOnce = false;
+        }
+      };
+      pc.addEventListener('iceconnectionstatechange', onIceStateChange);
+    }
+
+    call.on('close', () => { clearCallWatchdog(); console.log('Call closed'); endCall(true); });
+    call.on('error', err => { clearCallWatchdog(); console.error('Call error:', err); endCall(true); });
   }
 
   function enableRemoteSound() {
