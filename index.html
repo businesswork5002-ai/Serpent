@@ -11234,7 +11234,17 @@ ${msgRows}
       }
       voiceRecMime = voiceRecorder.mimeType || voiceRecMime || 'audio/webm';
       voiceRecorder.ondataavailable = e => { if (e.data.size > 0) voiceChunks.push(e.data); };
-      voiceRecorder.start(200);
+      // No timeslice argument here on purpose: MediaRecorder.start(200)
+      // emits a new fragment every 200ms, and on a lot of Android devices
+      // concatenating those fragments produces a webm file that LOOKS fine
+      // (waveform can even decode) but is actually corrupted and fails to
+      // play back — both in-app and after downloading, since it's the same
+      // broken bytes either way. Recording with no timeslice makes the
+      // browser emit one single, complete, correctly-finalized chunk when
+      // stop() is called instead, which is far more reliable across
+      // devices. The recording timer UI is unaffected since it already
+      // runs off its own separate setInterval, not off dataavailable events.
+      voiceRecorder.start();
       document.getElementById('mic-btn').classList.add('recording');
       document.getElementById('voice-record-bar').classList.add('show');
       voiceRecInterval = setInterval(() => {
@@ -11258,6 +11268,14 @@ ${msgRows}
       const blob = new Blob(voiceChunks, { type: mime });
       voiceRecorder.stream.getTracks().forEach(t => t.stop());
       if (voiceRecSeconds < 1) return; // too short
+      // Sanity check: a real recording of N seconds should be at least a
+      // few hundred bytes per second even at low bitrate. If it's way
+      // smaller than that, something went wrong in the encode — better to
+      // tell the person now than send/save bytes that won't play.
+      if (blob.size < voiceRecSeconds * 200) {
+        showToast('That recording came out empty — try again.', 'error');
+        return;
+      }
       const dur = voiceRecSeconds;
       const fileId = 'vn-' + Date.now();
       const url = URL.createObjectURL(blob);
