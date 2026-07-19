@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -16,6 +16,30 @@
       document.documentElement.setAttribute('data-skip-gate', '1');
     }
   } catch (e) {}
+</script>
+<script>
+  // Fix: on some Android WebViews, opening the on-screen keyboard doesn't
+  // shrink the page layout — it just pans/scrolls the whole page up to
+  // keep the focused input visible, which pushes the header and messages
+  // off the top of the screen and leaves a blank area where they used to
+  // be. The <meta viewport interactive-widget=resizes-content> tag fixes
+  // this on modern Chrome, but this is a belt-and-suspenders JS fallback:
+  // track the actual visible (keyboard-aware) height ourselves via
+  // visualViewport and drive a CSS variable from it, so #chat-screen /
+  // #setup-screen / body can shrink to fit no matter what the WebView does.
+  (function () {
+    function setAppHeight() {
+      const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+      document.documentElement.style.setProperty('--app-height', h + 'px');
+    }
+    setAppHeight();
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', setAppHeight);
+      window.visualViewport.addEventListener('scroll', setAppHeight);
+    }
+    window.addEventListener('resize', setAppHeight);
+    window.addEventListener('orientationchange', setAppHeight);
+  })();
 </script>
 <style>html[data-skip-gate="1"] #snake-gate { display: none !important; }</style>
 <meta name="theme-color" content="#120c10" />
@@ -97,6 +121,7 @@
     font-family: var(--font-body);
     font-weight: 400;
     height: 100dvh;
+    height: var(--app-height, 100dvh); /* JS-driven fallback for WebViews where keyboard-resize behavior is inconsistent */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -265,6 +290,7 @@
     width: 100%;
     max-width: 540px;
     height: 100dvh;
+    height: var(--app-height, 100dvh);
     background: var(--surface);
     display: flex;
     flex-direction: column;
@@ -440,6 +466,7 @@
     width: 100%;
     max-width: 540px;
     height: 100dvh;
+    height: var(--app-height, 100dvh);
     flex-direction: column;
     background: var(--surface);
     border-left: 1px solid var(--border-soft);
@@ -451,6 +478,7 @@
   @media (min-width: 600px) {
     #chat-screen {
       height: 100dvh;
+      height: var(--app-height, 100dvh);
       border-radius: 0;
     }
     body { background: var(--bg); }
@@ -4320,6 +4348,13 @@
         <span class="settings-row-chevron">›</span>
       </button>
 
+      <div class="section-label">NOTIFICATIONS</div>
+      <button class="settings-row" onclick="toggleNotifAlerts()">
+        <span>🔔 Notify &amp; vibrate for messages/calls</span>
+        <span class="sec-toggle-track" id="notif-toggle-track"><span class="sec-toggle-thumb"></span></span>
+      </button>
+      <p class="hint" style="padding:0 6px;">When on, a new message or incoming call vibrates your phone and shows a notification while the app is in the background (your browser will ask permission the first time). When off, it stays quiet — no vibration, no notification.</p>
+
       <div class="section-label">PRIVACY &amp; SECURITY</div>
       <button class="settings-row" onclick="toggleSnakeSecurity()">
         <span>🐍 Require Snake to open the app</span>
@@ -4645,6 +4680,26 @@
     <button class="settings-row" onclick="document.getElementById('import-data-input').click()"><span>📥 Restore from backup</span></button>
     <input type="file" id="import-data-input" accept="application/json" style="display:none;" onchange="importAllData(event)"/>
     <button class="block-modal-btn ghost" onclick="closeBackupSheet()">Close</button>
+  </div>
+</div>
+
+<!-- ══ CHAT ROW OPTIONS (long-press a chat in the list) ══ -->
+<div id="row-options-backdrop" onclick="if(event.target===this)closeRowOptions()" style="display:none;position:fixed;inset:0;background:rgba(8,6,16,0.75);backdrop-filter:blur(6px);z-index:600;align-items:flex-end;justify-content:center;">
+  <div style="width:100%;max-width:420px;background:var(--surface);border-radius:24px 24px 0 0;padding:22px 20px max(28px, env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;animation:sheet-up .35s cubic-bezier(.2,.9,.3,1.1);">
+    <div class="block-modal-title-text" id="row-options-title">Chat options</div>
+    <button class="settings-row" onclick="openMergePicker()"><span>🔗 Merge with another chat</span></button>
+    <button class="settings-row" onclick="deleteChatFromRowOptions()" style="color:var(--red);"><span>🗑 Delete chat</span></button>
+    <button class="block-modal-btn ghost" onclick="closeRowOptions()">Cancel</button>
+  </div>
+</div>
+
+<!-- ══ MERGE PICKER (choose which other chat to fold into this one) ══ -->
+<div id="merge-picker-backdrop" onclick="if(event.target===this)closeMergePicker()" style="display:none;position:fixed;inset:0;background:rgba(8,6,16,0.75);backdrop-filter:blur(6px);z-index:600;align-items:flex-end;justify-content:center;">
+  <div style="width:100%;max-width:420px;background:var(--surface);border-radius:24px 24px 0 0;padding:22px 20px max(28px, env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;max-height:75vh;">
+    <div class="block-modal-title-text">Merge with which chat?</div>
+    <div id="merge-picker-sub" style="font-size:13px;color:var(--muted);line-height:1.55;">Pick the other chat with this person. Their messages will be combined into one thread and the duplicate will be removed. This can't be undone.</div>
+    <div id="merge-picker-list" style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;"></div>
+    <button class="block-modal-btn ghost" onclick="closeMergePicker()">Cancel</button>
   </div>
 </div>
 
@@ -6613,6 +6668,8 @@
   }
   function notifyIfHidden(from, text) {
     if (!document.hidden) return;
+    if (!window.isNotifAlertsOn || !isNotifAlertsOn()) return; // toggle is off — stay quiet
+    try { if (navigator.vibrate) navigator.vibrate([120, 60, 120]); } catch (e) {}
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
       const n = new Notification('Serpent — ' + from, {
@@ -6852,7 +6909,20 @@
       document.getElementById('caller-name').textContent = callerLabel;
       document.getElementById('incoming-call-banner').classList.add('show');
       void document.getElementById('incoming-call-banner').offsetHeight;
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      if (window.isNotifAlertsOn && isNotifAlertsOn()) {
+        try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+        if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            const n = new Notification('Serpent — incoming call', {
+              body: callerLabel + ' is calling you',
+              tag: 'hearth-call',
+              renotify: true,
+              icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text y="26" font-size="28">🐍</text></svg>'
+            });
+            n.onclick = () => { window.focus(); n.close(); };
+          } catch (e) {}
+        }
+      }
     });
 
     thisPeer.on('disconnected', () => {
@@ -6989,15 +7059,24 @@
     } catch (e) {}
   }
 
-  // Background nudge — every 20s, quietly try reconnecting to any friend
-  // with messages still waiting to go out, without touching whatever
-  // thread is currently on screen.
-  setInterval(() => {
+  // Background nudge — quietly try reconnecting to any friend with messages
+  // still waiting to go out, without touching whatever thread is currently
+  // on screen. This can only ever deliver while BOTH people's apps happen
+  // to be open at an overlapping moment — there's no server here to hold a
+  // message for someone who's fully offline, by design (peer-to-peer, no
+  // backend). Shortened from 20s to 6s, plus an immediate attempt the
+  // moment this tab/app regains focus, so a friend opening the app doesn't
+  // have to wait out a long poll before a waiting message can reach them.
+  function retryPendingOutboxNow() {
     if (!peer || !peer.open) return;
     OfflineOutbox.idsWithPending().forEach(id => {
       if (!friendConnections[id] || !friendConnections[id].open) silentReconnect(id);
     });
-  }, 20000);
+  }
+  setInterval(retryPendingOutboxNow, 6000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) retryPendingOutboxNow();
+  });
 
   // ── Disappearing messages: expiry engine ──
   // Messages can carry an `expiresAt` timestamp (set either by the legacy
@@ -7206,6 +7285,51 @@
       if (f && f.online !== online) { f.online = online; this.save(f); }
     },
 
+    // Two entries for the same person happen when their device generates a
+    // brand-new random code (cleared storage, reinstalled, new device,
+    // etc.) — from here it just looks like a new friend, since the app
+    // has no way to know it's the same human behind a different code.
+    // This folds one entry into another: message history is merged into
+    // keepId (sorted by time), and otherId is removed entirely.
+    mergeInto(keepId, otherId) {
+      if (!keepId || !otherId || keepId === otherId) return false;
+      const keep = this.get(keepId), other = this.get(otherId);
+      if (!keep || !other) return false;
+
+      const keepMsgs  = this.loadMessages(keepId);
+      const otherMsgs = this.loadMessages(otherId);
+      const merged = keepMsgs.concat(otherMsgs).sort((a, b) => new Date(a.time || 0) - new Date(b.time || 0));
+      this.persistMessages(keepId, merged);
+      try { localStorage.removeItem(this.MSG_KEY(otherId)); } catch (e) {}
+
+      keep.lastActive = Math.max(keep.lastActive || 0, other.lastActive || 0);
+      keep.unread = (keep.unread || 0) + (other.unread || 0);
+      if (merged.length) {
+        const last = merged[merged.length - 1];
+        if (last.text) keep.lastMsg = String(last.text).slice(0, 60);
+      }
+      if (!keep.avatar && other.avatar) keep.avatar = other.avatar;
+      this.save(keep);
+
+      // Carry over any not-yet-delivered queued messages instead of losing them
+      const otherOutbox = OfflineOutbox.get(otherId);
+      if (otherOutbox.length) {
+        const keepOutbox = OfflineOutbox.get(keepId);
+        OfflineOutbox.save(keepId, keepOutbox.concat(otherOutbox));
+        OfflineOutbox.clear(otherId);
+      }
+
+      if (friendConnections[otherId]) { try { friendConnections[otherId].close(); } catch (e) {} delete friendConnections[otherId]; }
+      if (activeFriendId === otherId) activeFriendId = keepId;
+
+      const all = this.getAll();
+      delete all[otherId];
+      this.saveAll(all);
+      this.refreshListUI();
+      return true;
+    },
+
+
     // 'online' is only ever true while an actual live connection is open —
     // but it gets written to localStorage, so if the app is closed or
     // refreshed while a friend was connected, that stale "online: true"
@@ -7330,6 +7454,13 @@
     },
 
     backToList() {
+      // Safety net: if a call (or a stalled reconnect attempt) was still
+      // in progress, close it out fully before navigating away — otherwise
+      // a leftover call object could fire an event later and reopen the
+      // video overlay on top of whatever screen the user has moved to.
+      if (currentCall || document.getElementById('video-overlay').classList.contains('show')) {
+        endCall(true);
+      }
       activeFriendId = null;
       document.getElementById('chat-screen').style.display = 'none';
       document.getElementById('setup-screen').style.display = 'flex';
@@ -7815,7 +7946,9 @@
       window._pendingGroupCallVideo = !!incomingCall.metadata.video;
       document.getElementById('caller-name').textContent = `Group call — ${group ? group.name : 'a group'}`;
       document.getElementById('incoming-call-banner').classList.add('show');
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      if (window.isNotifAlertsOn && isNotifAlertsOn()) {
+        try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+      }
     },
 
     async acceptIncomingCall() {
@@ -7970,7 +8103,7 @@
     }
 
     wrap.innerHTML = combined.map(x => `
-      <div class="group-row" data-group-id="${x.kind === 'group' ? x.id : ''}" onclick="${x.kind === 'friend' ? `Friends.open('${x.id}')` : `Groups.open('${x.id}')`}">
+      <div class="group-row" data-group-id="${x.kind === 'group' ? x.id : ''}" data-kind="${x.kind}" data-friend-id="${x.kind === 'friend' ? x.id : ''}" onclick="${x.kind === 'friend' ? `Friends.open('${x.id}')` : `Groups.open('${x.id}')`}">
         <div class="group-row-icon" ${x.avatar ? `style="background:none;padding:0;"` : ''}>
           ${x.avatar ? `<img src="${x.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="">` : escapeHtml((x.name[0] || '?').toUpperCase())}
         </div>
@@ -7986,6 +8119,89 @@
         </div>
       </div>
     `).join('');
+  }
+
+  // ── Long-press a chat row → options sheet (merge / delete) ──────────────
+  // Delegated on the list container since rows are re-rendered often.
+  let _rowPressTimer = null;
+  let _rowPressId = null;
+  (function setupRowLongPress() {
+    const wrap = document.getElementById('chats-list');
+    if (!wrap) return;
+    const start = (e) => {
+      const row = e.target.closest('.group-row[data-kind="friend"]');
+      if (!row) return;
+      _rowPressId = row.getAttribute('data-friend-id');
+      _rowPressTimer = setTimeout(() => {
+        _rowPressTimer = null;
+        if (navigator.vibrate) navigator.vibrate(15);
+        openRowOptions(_rowPressId);
+      }, 500);
+    };
+    const cancel = () => { if (_rowPressTimer) { clearTimeout(_rowPressTimer); _rowPressTimer = null; } };
+    wrap.addEventListener('touchstart', start, { passive: true });
+    wrap.addEventListener('touchend', cancel);
+    wrap.addEventListener('touchmove', cancel);
+    wrap.addEventListener('mousedown', start);
+    wrap.addEventListener('mouseup', cancel);
+    wrap.addEventListener('mouseleave', cancel);
+  })();
+
+  let _rowOptionsTargetId = null;
+  function openRowOptions(friendId) {
+    const f = Friends.get(friendId);
+    if (!f) return;
+    _rowOptionsTargetId = friendId;
+    document.getElementById('row-options-title').textContent = f.name || 'Chat options';
+    document.getElementById('row-options-backdrop').style.display = 'flex';
+  }
+  function closeRowOptions() {
+    document.getElementById('row-options-backdrop').style.display = 'none';
+  }
+  function deleteChatFromRowOptions() {
+    if (!_rowOptionsTargetId) return;
+    const f = Friends.get(_rowOptionsTargetId);
+    closeRowOptions();
+    if (!f) return;
+    if (!confirm(`Delete your chat with ${f.name || 'this person'}? This can't be undone.`)) return;
+    Friends.remove(_rowOptionsTargetId);
+  }
+
+  function openMergePicker() {
+    const targetId = _rowOptionsTargetId;
+    closeRowOptions();
+    if (!targetId) return;
+    const target = Friends.get(targetId);
+    if (!target) return;
+    const others = Friends.list().filter(f => f.id !== targetId);
+    const listEl = document.getElementById('merge-picker-list');
+    document.getElementById('merge-picker-sub').textContent =
+      `Pick the other chat that's really the same person as "${target.name || targetId}". Both threads' messages will be combined and the duplicate removed.`;
+    if (!others.length) {
+      listEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0;">No other chats to merge with.</div>';
+    } else {
+      listEl.innerHTML = others.map(f => `
+        <button class="settings-row" onclick="confirmMerge('${targetId}','${f.id}')">
+          <span>${escapeHtml(f.name || f.id)} <span style="color:var(--muted);font-size:12px;">${f.lastMsg ? '— ' + escapeHtml(f.lastMsg.slice(0, 24)) : ''}</span></span>
+        </button>
+      `).join('');
+    }
+    document.getElementById('merge-picker-backdrop').style.display = 'flex';
+  }
+  function closeMergePicker() {
+    document.getElementById('merge-picker-backdrop').style.display = 'none';
+  }
+  function confirmMerge(targetId, otherId) {
+    const a = Friends.get(targetId), b = Friends.get(otherId);
+    if (!a || !b) { closeMergePicker(); return; }
+    // Keep whichever entry was active more recently as the surviving one —
+    // it's the more likely one to still be a live, reachable code.
+    const keepId  = (a.lastActive || 0) >= (b.lastActive || 0) ? targetId : otherId;
+    const otherIdFinal = keepId === targetId ? otherId : targetId;
+    if (!confirm(`Merge these two chats into one? This can't be undone.`)) return;
+    const ok = Friends.mergeInto(keepId, otherIdFinal);
+    closeMergePicker();
+    if (ok) showToast('Chats merged ✓', 'success'); else showToast('Couldn\'t merge those chats.', 'error');
   }
 
   function switchMainTab(tab) {
@@ -9106,6 +9322,7 @@
   // relay only, since a symmetric-NAT phone often can't finish a direct/
   // STUN path at all and needs the relay from the start.
   function attemptIceRestart(call) {
+    if (currentCall !== call) return; // stale — this call was already replaced/ended, do nothing
     const pc = call && call.peerConnection;
     if (pc && typeof pc.restartIce === 'function') {
       try { pc.restartIce(); armCallWatchdog(call); return; } catch (e) { console.warn('restartIce failed:', e); }
@@ -9115,10 +9332,15 @@
   }
 
   function redialThroughRelay(oldCall) {
+    if (currentCall !== oldCall) return; // stale — a newer call already replaced this one, or the user left
     if (!conn || !conn.peer) return;
     const wasVideo = !!(_currentCallMeta && _currentCallMeta.type === 'video');
     try { oldCall && oldCall.close(); } catch (e) {}
     getLocalStream(wasVideo).then(stream => {
+      // Re-check staleness after the async getUserMedia() call — the user
+      // may have backed out of the call screen while we were waiting on it.
+      if (currentCall !== oldCall && currentCall !== null) return;
+      if (!conn || !conn.peer) { stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); return; }
       const relayOnlyServers = ICE_SERVERS.filter(s => String(s.urls).startsWith('turn:'));
       currentCall = peer.call(conn.peer, stream, {
         metadata: { video: wasVideo },
@@ -9137,6 +9359,7 @@
     armCallWatchdog(call);
 
     call.on('stream', remoteStream => {
+      if (currentCall !== call) return; // stale — user already left this call
       console.log('Remote stream received');
       clearCallWatchdog();
       _callRetriedOnce = false;
@@ -9173,9 +9396,17 @@
     // which often self-heals in a few seconds, and only escalates to
     // 'failed' if it doesn't. Only 'failed' triggers an actual recovery
     // attempt, so a brief blip doesn't cause an unnecessary redial.
+    //
+    // IMPORTANT: this listener can fire well after the call it's attached
+    // to has been replaced or ended (e.g. the user backed out to the friend
+    // list, or started a fresh call). Every branch below re-checks
+    // `currentCall !== call` first so a stale/leftover call from an earlier
+    // attempt can never redial or pop the video overlay back open on a
+    // screen the user has already left.
     const pc = call.peerConnection;
     if (pc) {
       const onIceStateChange = () => {
+        if (currentCall !== call) { pc.removeEventListener('iceconnectionstatechange', onIceStateChange); return; }
         console.log('ICE connection state:', pc.iceConnectionState);
         if (pc.iceConnectionState === 'disconnected') {
           setStatus && setStatus('Connection unstable — trying to recover…', 'err');
@@ -9194,8 +9425,18 @@
       pc.addEventListener('iceconnectionstatechange', onIceStateChange);
     }
 
-    call.on('close', () => { clearCallWatchdog(); console.log('Call closed'); endCall(true); });
-    call.on('error', err => { clearCallWatchdog(); console.error('Call error:', err); endCall(true); });
+    call.on('close', () => {
+      clearCallWatchdog();
+      console.log('Call closed');
+      if (currentCall !== call) return; // stale — already replaced/ended, nothing to clean up
+      endCall(true);
+    });
+    call.on('error', err => {
+      clearCallWatchdog();
+      console.error('Call error:', err);
+      if (currentCall !== call) return; // stale — already replaced/ended, nothing to clean up
+      endCall(true);
+    });
   }
 
   function enableRemoteSound() {
@@ -10363,6 +10604,7 @@ ${msgRows}
   // ── Web Audio context for the mixer (created once, reused) ──
   let audioCtx = null;
   let recAudioDest = null; // MediaStreamAudioDestinationNode
+  let recCanvasRAF = null; // requestAnimationFrame handle for the compositing canvas below
 
   function getAudioCtx() {
     if (!audioCtx || audioCtx.state === 'closed') {
@@ -10411,21 +10653,57 @@ ${msgRows}
       }
     }
 
-    // ── VIDEO: add raw video tracks (these are fine as-is) ───────────────
+    // ── VIDEO ──────────────────────────────────────────────────────────
+    // Fix for "recording isn't mirrored": #local-video is only mirrored
+    // visually via a CSS transform on screen — the actual camera track
+    // underneath was never flipped, so pushing that raw track straight
+    // into the recorder produced a selfie that looked backwards compared
+    // to what you saw live (any text/writing came out reversed). Instead,
+    // draw both faces onto a canvas — remote full-frame as-is (their own
+    // camera already sees them the right way round, so it's left alone),
+    // local video mirrored as a small picture-in-picture, exactly matching
+    // the live on-screen preview — and record that canvas instead of the
+    // raw tracks. This also fixes the separate issue where only one of
+    // the two raw video tracks was ever actually ending up in the output,
+    // since a canvas produces one single properly composited video track.
     const finalTracks = [...recAudioDest.stream.getAudioTracks()];
 
     if (withVideo) {
-      // Prefer remote video (friend's face) as the primary track
-      const remoteVideo2 = document.getElementById('remote-video');
-      if (remoteVideo2.srcObject) {
-        remoteVideo2.srcObject.getVideoTracks().forEach(t => finalTracks.push(t));
-      }
-      // Also add local camera (picture-in-picture is not possible in a single
-      // MediaRecorder track, but both face tracks go in — most browsers pick
-      // the first video track as dominant; user can see both via the UI)
-      if (localStream) {
-        localStream.getVideoTracks().forEach(t => finalTracks.push(t));
-      }
+      const remoteVideoEl = document.getElementById('remote-video');
+      const localVideoEl = document.getElementById('local-video');
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      const cctx = canvas.getContext('2d');
+
+      recCanvasRAF = 'active'; // sentinel so drawFrame keeps scheduling itself until stopRecording clears it
+      const drawFrame = () => {
+        if (!recCanvasRAF) return; // recording stopped — stop scheduling
+        cctx.fillStyle = '#0a0810';
+        cctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (remoteVideoEl.srcObject && remoteVideoEl.videoWidth) {
+          cctx.drawImage(remoteVideoEl, 0, 0, canvas.width, canvas.height);
+        }
+
+        if (localVideoEl.srcObject && localVideoEl.videoWidth) {
+          const pipW = canvas.width * 0.28;
+          const pipH = pipW * (localVideoEl.videoHeight / localVideoEl.videoWidth || 9 / 16);
+          const pipX = canvas.width - pipW - 24;
+          const pipY = canvas.height - pipH - 24;
+          cctx.save();
+          cctx.translate(pipX + pipW, pipY);
+          cctx.scale(-1, 1); // mirror — matches the live selfie view exactly
+          cctx.drawImage(localVideoEl, 0, 0, pipW, pipH);
+          cctx.restore();
+        }
+
+        recCanvasRAF = requestAnimationFrame(drawFrame);
+      };
+      drawFrame();
+
+      const canvasStream = canvas.captureStream(30);
+      canvasStream.getVideoTracks().forEach(t => finalTracks.push(t));
     }
 
     return new MediaStream(finalTracks);
@@ -10584,6 +10862,7 @@ ${msgRows}
       updateRecUI(false);
       // Clean up audio context nodes — they'll be recreated next recording
       recAudioDest = null;
+      recCanvasRAF = null; // stops the compositing canvas's self-scheduling loop
     };
 
     mediaRecorder.onerror = e => {
@@ -13766,6 +14045,40 @@ ${msgRows}
       document.addEventListener('DOMContentLoaded', applySecurityUI);
     } else {
       applySecurityUI();
+    }
+  })();
+
+  // ════════════════════════════════════════════════════════════
+  // ── NOTIFICATIONS & VIBRATION TOGGLE ────────────────────────
+  // ════════════════════════════════════════════════════════════
+  (function () {
+    const NK = 'hearth-notif-vibrate';
+
+    // Default OFF — "normal" (quiet) until the person turns it on themselves.
+    let notifOn = false;
+    try { notifOn = localStorage.getItem(NK) === '1'; } catch (e) {}
+
+    function applyNotifUI() {
+      const track = document.getElementById('notif-toggle-track');
+      if (track) track.classList.toggle('on', notifOn);
+    }
+
+    window.toggleNotifAlerts = function () {
+      notifOn = !notifOn;
+      try { localStorage.setItem(NK, notifOn ? '1' : '0'); } catch (e) {}
+      applyNotifUI();
+      // Ask for notification permission right away when turning it on, so
+      // the browser's prompt happens in response to this tap rather than
+      // silently failing later when a message actually arrives.
+      if (notifOn) requestNotificationPermission();
+    };
+
+    window.isNotifAlertsOn = function () { return notifOn; };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', applyNotifUI);
+    } else {
+      applyNotifUI();
     }
   })();
 
